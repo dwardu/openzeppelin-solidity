@@ -1,5 +1,8 @@
 pragma solidity ^0.5.0;
 
+import "./LegacyMerkleTrees.sol";
+
+
 /**
  * @dev These functions deal with verification of Merkle trees (hash trees),
  */
@@ -9,23 +12,11 @@ library MerkleProof {
      * defined by `root`. For this, a `proof` must be provided, containing
      * sibling hashes on the branch from the leaf to the root of the tree. Each
      * pair of leaves and each pair of pre-images are assumed to be sorted.
+     * @param proof Merkle proof
+     * @param root Merkle root
+     * @param leafDataBlock Leaf data block of Merkle tree, before hashing
      */
-    function verify(bytes32[] memory proof, bytes32 root, bytes32 leaf) internal pure returns (bool) {
-        bytes32 computedHash = leaf;
-
-        for (uint256 i = 0; i < proof.length; i++) {
-            bytes32 proofElement = proof[i];
-
-            if (computedHash < proofElement) {
-                // Hash(current computed hash + current element of the proof)
-                computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
-            } else {
-                // Hash(current element of the proof + current computed hash)
-                computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
-            }
-        }
-
-        // Check if the computed hash (root) is equal to the provided root
-        return computedHash == root;
+    function verify(bytes32[] memory proof, bytes32 root, bytes memory leafDataBlock) internal pure returns (bool) {
+        return LegacyMerkleTrees.verifyProof(root, leafDataBlock, proof);
     }
 }
