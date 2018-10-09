@@ -124,7 +124,7 @@ library MerkleTrees {
    * @notice Verifies a Merkle proof proving the existence of a leaf data
    * block in a Merkle tree.
    * @param self The Merkle tree configuration instance.
-   * @param The root of the Merkle tree to verify the proof against.
+   * @param root The root of the Merkle tree to verify the proof against.
    * @param leafDataBlock The leaf data block (unhashed) whose exitence to verify.
    * @param proof Merkle proof containing sibling hashes on the branch from
    * the leaf to the root of the Merkle tree.
