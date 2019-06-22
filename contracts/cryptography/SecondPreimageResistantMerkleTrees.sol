@@ -17,47 +17,47 @@ import "./MerkleTrees.sol";
  */
 library SecondPreimageResistantMerkleTrees {
 
-  using MerkleTrees for MerkleTrees.TreeConfig;
+    using MerkleTrees for MerkleTrees.TreeConfig;
 
-  function _keccak256Prepend00Leaf(bytes memory leafDataBlock)
-    internal
-    pure
-    returns (bytes32)
-  {
-    return keccak256(abi.encodePacked(bytes1(0x00), leafDataBlock));
-  }
+    function _keccak256Prepend00Leaf(bytes memory leafDataBlock)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(bytes1(0x00), leafDataBlock));
+    }
 
-  function _keccak256Prepend01SortNodePair(bytes32 h1, bytes32 h2)
-    internal
-    pure
-    returns (bytes32)
-  {
-    return keccak256(
-      h1 < h2
-        ? abi.encodePacked(bytes1(0x01), h1, h2)
-        : abi.encodePacked(bytes1(0x01), h2, h1)
-    );
-  }
+    function _keccak256Prepend01SortNodePair(bytes32 h1, bytes32 h2)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(
+            h1 < h2
+                ? abi.encodePacked(bytes1(0x01), h1, h2)
+                : abi.encodePacked(bytes1(0x01), h2, h1)
+        );
+    }
 
-  function _config() internal pure returns (MerkleTrees.TreeConfig memory config) {
-    config._hashLeafData = _keccak256Prepend00Leaf;
-    config._hashNodePair = _keccak256Prepend01SortNodePair;
-  }
+    function _config() internal pure returns (MerkleTrees.TreeConfig memory config) {
+        config._hashLeafData = _keccak256Prepend00Leaf;
+        config._hashNodePair = _keccak256Prepend01SortNodePair;
+    }
 
-  function newTree(uint256 size)
-    internal
-    pure
-    returns (MerkleTrees.Tree memory tree)
-  {
-    return _config().newTree(size);
-  }
+    function newTree(uint256 size)
+        internal
+        pure
+        returns (MerkleTrees.Tree memory tree)
+    {
+        return _config().newTree(size);
+    }
 
-  function verifyProof(bytes32 root, bytes memory leafDataBlock, bytes32[] memory proof)
-    internal
-    pure
-    returns (bool)
-  {
-    return _config().verifyProof(root, leafDataBlock, proof);
-  }
+    function verifyProof(bytes32 root, bytes memory leafDataBlock, bytes32[] memory proof)
+        internal
+        pure
+        returns (bool)
+    {
+        return _config().verifyProof(root, leafDataBlock, proof);
+    }
 
 }
