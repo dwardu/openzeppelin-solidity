@@ -4,11 +4,10 @@ pragma solidity ^0.5.0;
  * @title Generic Merkle-tree library
  * @author Edward Grech (@dwardu)
  * @notice Functions to compute a Merkle-root and verify a Merkle-proof.
- * @dev The Merkle-tree implementation in this library may be configured
- * with arbitrary leaf/node-pair hash functions.
- * By choosing the two functions to be different, it is possible
- * to guard against second pre-image attacks.
+ * @dev The Merkle-tree implementation in this library uses different
+ * hashing functions for leaves and node-pairs, to guard against second pre-image attacks.
  * See https://flawed.net.nz/2018/02/21/attacking-merkle-trees-with-a-second-preimage-attack/
+ * Leaf data is passed to both functions unhashed.
  */
 library MerkleTrees {
 
