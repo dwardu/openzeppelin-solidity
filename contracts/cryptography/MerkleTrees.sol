@@ -6,35 +6,27 @@ pragma solidity ^0.5.0;
  * @notice Functions to compute a Merkle-root and verify a Merkle-proof.
  * @dev The Merkle-tree implementation in this library may be configured
  * with arbitrary leaf/node-pair hash functions.
+ * By choosing the two functions to be different, it is possible
+ * to guard against second pre-image attacks.
+ * See https://flawed.net.nz/2018/02/21/attacking-merkle-trees-with-a-second-preimage-attack/
  */
 library MerkleTrees {
 
-    using MerkleTrees for TreeConfig;
+    function _hashLeafData(bytes memory leafDataBlock) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(bytes1(0x00), leafDataBlock));
+    }
 
-    /**
-     * @dev Holds references to the leaf/node hash functions
-     * to be used to construct a Merkle tree.
-     * By choosing the two functions to be different, it is possible
-     * to guard against second pre-image attacks.
-     * See https://flawed.net.nz/2018/02/21/attacking-merkle-trees-with-a-second-preimage-attack/
-     * Give a TreeConfig, it is then possible to build a Merkle tree
-     * to compute its root, or to verify a Merkle proof for a leaf in
-     * a tree with a specific root.
-     */
-    struct TreeConfig {
-        function(bytes memory) internal pure returns (bytes32) _hashLeafData;
-        function(bytes32, bytes32) internal pure returns (bytes32) _hashNodePair;
+    function _hashNodePair(bytes32 h1, bytes32 h2) internal pure returns (bytes32) {
+        return keccak256(
+            h1 < h2
+                ? abi.encodePacked(bytes1(0x01), h1, h2)
+                : abi.encodePacked(bytes1(0x01), h2, h1)
+        );
     }
 
     using MerkleTrees for Tree;
 
     struct Tree {
-        /**
-         * @dev Holds references to the leaf/node hash functions
-         * to be used for this tree.
-         */
-        TreeConfig _config;
-
         /**
          * @dev Used as a guard against computing the root more than once, as
          * the first computation destroys the original leaf nodes.
@@ -52,13 +44,8 @@ library MerkleTrees {
      * @notice The first step towards computing a Merkle root is to allocate
      * a new tree by calling this function.
      */
-    function newTree(TreeConfig memory self, uint256 size)
-        internal
-        pure
-        returns (Tree memory tree)
-    {
+    function newTree(uint256 size) internal pure returns (Tree memory tree) {
         assert(1 <= size);
-        tree._config = self;
         tree._nodes = new bytes32[](size);
         tree._wasRootComputed = false;
     }
@@ -67,11 +54,8 @@ library MerkleTrees {
      * @notice After allocating a tree, this function should be called
      * with each leaf data block.
      */
-    function setLeafDataBlock(Tree memory self, uint256 index, bytes memory leafDataBlock)
-        internal
-        pure
-    {
-        self._nodes[index] = self._config._hashLeafData(leafDataBlock);
+    function setLeafDataBlock(Tree memory self, uint256 index, bytes memory leafDataBlock) internal pure {
+        self._nodes[index] = _hashLeafData(leafDataBlock);
     }
 
     /**
@@ -79,11 +63,7 @@ library MerkleTrees {
      * this function is called to compute the Merkle root.
      * @return The Merkle root.
      */
-    function computeRoot(Tree memory self)
-        internal
-        pure
-        returns (bytes32 root)
-    {
+    function computeRoot(Tree memory self) internal pure returns (bytes32 root) {
         assert(!self._wasRootComputed);
 
         uint256 nCurr = self._nodes.length;
@@ -100,7 +80,7 @@ library MerkleTrees {
             // Loop over all paired sibling elements
             for (uint256 iNext = 0; iNext < nNext; iNext++) {
                 uint256 iCurr = iNext * 2;
-                self._nodes[iNext] = self._config._hashNodePair(
+                self._nodes[iNext] = _hashNodePair(
                     self._nodes[iCurr],
                     self._nodes[iCurr + 1]
                 );
@@ -123,14 +103,12 @@ library MerkleTrees {
     /**
      * @notice Verifies a Merkle proof proving the existence of a leaf data
      * block in a Merkle tree.
-     * @param self The Merkle tree configuration instance.
      * @param root The root of the Merkle tree to verify the proof against.
      * @param leafDataBlock The leaf data block (unhashed) whose exitence to verify.
      * @param proof Merkle proof containing sibling hashes on the branch from
      * the leaf to the root of the Merkle tree.
      */
     function verifyProof(
-        TreeConfig memory self,
         bytes32 root,
         bytes memory leafDataBlock,
         bytes32[] memory proof
@@ -139,10 +117,10 @@ library MerkleTrees {
         pure
         returns (bool)
     {
-        bytes32 computedHash = self._hashLeafData(leafDataBlock);
+        bytes32 computedHash = _hashLeafData(leafDataBlock);
 
         for (uint256 i = 0; i < proof.length; i++) {
-            computedHash = self._hashNodePair(computedHash, proof[i]);
+            computedHash = _hashNodePair(computedHash, proof[i]);
         }
 
         return computedHash == root;

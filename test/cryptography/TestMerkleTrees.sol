@@ -1,10 +1,10 @@
 pragma solidity ^0.5.0;
 
 import "truffle/Assert.sol";
-import "../../contracts/cryptography/SecondPreimageResistantMerkleTrees.sol";
+import "../../contracts/cryptography/MerkleTrees.sol";
 
 
-contract TestSecondPreimageResistantMerkleTrees {
+contract TestMerkleTrees {
 
     bytes constant L0 = "p";
     bytes constant L1 = "rrr";
@@ -54,7 +54,7 @@ contract TestSecondPreimageResistantMerkleTrees {
     {
         bytes[5] memory allLeaves = [L0, L1, L2, L3, L4];
 
-        MerkleTrees.Tree memory tree = SecondPreimageResistantMerkleTrees.newTree(size);
+        MerkleTrees.Tree memory tree = MerkleTrees.newTree(size);
 
         for (uint256 i = 0; i < size; i++) {
             tree.setLeafDataBlock(i, allLeaves[i]);
